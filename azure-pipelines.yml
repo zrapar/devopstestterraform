@@ -1,0 +1,39 @@
+trigger:
+- master
+
+pool:
+  vmImage: ubuntu-latest
+
+steps:
+- task: Bash@3
+  inputs:
+    targetType: 'inline'
+    script: 'sed -i -e "s#__AWS_AK__#$(AWS_AK)#g" terraform.tfvars.json && sed -i -e "s#__AWS_SK__#$(AWS_SK)#g" terraform.tfvars.json'
+- task: TerraformTaskV3@3
+  displayName: "Check Terraform"
+  inputs:
+    provider: 'aws'
+    command: 'init'
+    backendServiceAWS: 'AWS Terraform User'
+    backendAWSBucketName: 'devopstest-terraform-s3'
+    backendAWSKey: 'terraform'
+- task: TerraformTaskV3@3
+  displayName: "Plan Terraform"
+  inputs:
+    provider: 'aws'
+    command: 'plan'
+    environmentServiceNameAWS: 'AWS Terraform User'
+- task: TerraformTaskV3@3
+  displayName: "Apply Terraform"
+  inputs:
+    provider: 'aws'
+    command: 'apply'
+    commandOptions: '--auto-approve'
+    environmentServiceNameAWS: 'AWS Terraform User'
+# - task: TerraformTaskV3@3
+#   displayName: "Destroy Terraform"
+#   inputs:
+#     provider: 'aws'
+#     command: 'destroy'
+#     commandOptions: '--auto-approve'
+#     environmentServiceNameAWS: 'AWS Terraform User'
